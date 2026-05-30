@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🧭 Starry Abyss Wanderer - Panoramic Geography Map</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0a1628;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      color: #c0d0e8;
+    }
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #0d1b2a;
+      box-shadow: inset 0 0 50px rgba(0, 10, 30, 0.6);
+    }
+    
+    /* 顶部悬浮面板 */
+    .top-panel {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      z-index: 100;
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .title-card {
+      background: rgba(15,25,45,0.9);
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      border: 1px solid rgba(100,160,255,0.3);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .title-card h4 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #e0ecff;
+      font-family: Georgia, serif;
+      font-weight: bold;
+    }
+    .title-card span {
+      font-size: 0.65rem;
+      color: rgba(180,200,230,0.7);
+      display: block;
+      margin-top: 0.1rem;
+    }
+
+    /* 右侧信息面板 */
+    .detail-panel {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 340px;
+      max-height: calc(100vh - 2rem);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      background: rgba(10,20,40,0.92);
+      border: 1px solid rgba(100,140,200,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      color: #c0d0e8;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .panel-content {
+      padding: 1rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(10, 20, 35, 0.5);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(100, 140, 200, 0.4);
+      border-radius: 2px;
+    }
+    
+    /* 列表与按钮 */
+    .landmark-tag {
+      font-size: 0.7rem;
+      color: #fff;
+      background: rgba(60,90,140,0.6);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+    .landmark-title {
+      margin: 0.2rem 0 0 0;
+      font-size: 1.25rem;
+      color: #e0ecff;
+      font-family: Georgia, serif;
+      font-weight: bold;
+    }
+    .adjacent-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.3rem;
+    }
+    .adjacent-btn {
+      font-size: 0.75rem;
+      background: rgba(60,90,140,0.4);
+      border: 1px solid rgba(100,140,200,0.3);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      color: #c0d0e8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .adjacent-btn:hover {
+      background: rgba(80,120,180,0.6);
+      color: #fff;
+    }
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgba(140,180,230,0.6);
+      text-align: center;
+      padding: 3rem 0;
+    }
+
+    /* 闪烁脉动 */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* 点击与选中地标高亮 */
+    g[data-id] {
+      transition: transform 0.2s;
+    }
+    g[data-id]:hover {
+      filter: drop-shadow(0px 0px 4px rgba(255, 170, 68, 0.8));
+    }
+    .selected-node circle {
+      stroke: #ffaa44 !important;
+    }
+    .selected-node text {
+      fill: #ffcc66 !important;
+      font-weight: bold !important;
+    }
+    .selected-ring {
+      display: block !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-panel">
+      <div class="title-card">
+        <h4>🧭 Starry Abyss Wanderer - Panoramic Geography Map</h4>
+        <span>Global Geographic Distribution (Offline Read-Only)</span>
+      </div>
+    </div>
+
+    <svg width="100%" height="100%" viewBox="0 0 800 500" style="width: 100vw; height: 100vh; user-select: none; cursor: default;"><rect x="0" y="0" width="100%" height="100%" fill="#0a1628"></rect><defs><radialGradient id="paperGradFullscreen" cx="50%" cy="50%" r="75%"><stop offset="0%" stop-color="#c4a46c"></stop><stop offset="55%" stop-color="#8fa85a"></stop><stop offset="100%" stop-color="#2d5a27"></stop></radialGradient><linearGradient id="northPoleIce" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8f4ff" stop-opacity="0.75"></stop><stop offset="40%" stop-color="#d0e8f8" stop-opacity="0.3"></stop><stop offset="100%" stop-color="#d0e8f8" stop-opacity="0"></stop></linearGradient><linearGradient id="southPoleIce" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#e8f4ff" stop-opacity="0.75"></stop><stop offset="40%" stop-color="#d0e8f8" stop-opacity="0.3"></stop><stop offset="100%" stop-color="#d0e8f8" stop-opacity="0"></stop></linearGradient><clipPath id="worldMapClip"><ellipse cx="400" cy="250" rx="374" ry="234"></ellipse></clipPath></defs><g><ellipse cx="400" cy="250" rx="380" ry="240" fill="url(#paperGradFullscreen)" stroke="#1a3a1a" stroke-width="2"></ellipse><ellipse cx="400" cy="250" rx="374" ry="234" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.6" stroke-dasharray="3,3"></ellipse><g clip-path="url(#worldMapClip)"><g stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="3,4" fill="none"><line x1="400" y1="10" x2="400" y2="490"></line><path d="M 400,10 Q 300,250 400,490"></path><path d="M 400,10 Q 200,250 400,490"></path><path d="M 400,10 Q 100,250 400,490"></path><path d="M 400,10 Q 0,250 400,490"></path><path d="M 400,10 Q 500,250 400,490"></path><path d="M 400,10 Q 600,250 400,490"></path><path d="M 400,10 Q 700,250 400,490"></path><path d="M 400,10 Q 800,250 400,490"></path><line x1="0" y1="50" x2="800" y2="50"></line><line x1="0" y1="90" x2="800" y2="90"></line><line x1="0" y1="130" x2="800" y2="130"></line><line x1="0" y1="170" x2="800" y2="170"></line><line x1="0" y1="210" x2="800" y2="210"></line><line x1="0" y1="250" x2="800" y2="250"></line><line x1="0" y1="290" x2="800" y2="290"></line><line x1="0" y1="330" x2="800" y2="330"></line><line x1="0" y1="370" x2="800" y2="370"></line></g><ellipse cx="400" cy="25" rx="350" ry="50" fill="url(#northPoleIce)"></ellipse><ellipse cx="400" cy="475" rx="350" ry="50" fill="url(#southPoleIce)"></ellipse><ellipse cx="320" cy="58" rx="60" ry="15" fill="rgba(220,238,255,0.22)"></ellipse><ellipse cx="480" cy="52" rx="45" ry="12" fill="rgba(220,238,255,0.18)"></ellipse><ellipse cx="250" cy="48" rx="35" ry="10" fill="rgba(230,242,255,0.15)"></ellipse><ellipse cx="350" cy="443" rx="55" ry="14" fill="rgba(220,238,255,0.22)"></ellipse><ellipse cx="460" cy="448" rx="50" ry="12" fill="rgba(220,238,255,0.18)"></ellipse><ellipse cx="530" cy="440" rx="40" ry="11" fill="rgba(230,242,255,0.15)"></ellipse><path d="M -400,-200 L 230,-200 Q 140,0 180,100 Q 310,180 260,250 Q 120,340 170,400 Q 260,470 230,520 L -400,600 Z" fill="#1a4d2e" stroke="#0d3318" stroke-width="1" opacity="0.88"></path><text id="svg-forest-label-1" x="30" y="180" fill="rgba(200,255,200,0.35)" font-size="11" font-weight="bold" letter-spacing="3" style="font-family: Georgia, serif;">[Deep Green Forest - Green Sea]</text><path d="M 800,-200 L 570,-200 Q 460,-20 520,60 Q 680,140 640,230 Q 500,320 560,400 Q 660,470 570,520 L 800,600 Z" fill="#1a4d2e" stroke="#0d3318" stroke-width="1" opacity="0.88"></path><text id="svg-forest-label-2" x="660" y="190" fill="rgba(200,255,200,0.35)" font-size="12" font-weight="bold" letter-spacing="4" style="font-family: Georgia, serif;">[Green Sea]</text><g transform="translate(489.6, 348) rotate(23.4)" opacity="0.6" data-id="loc_kunluoer_mountains" style="cursor: pointer;"><rect x="-30" y="-100" width="70" height="200" fill="transparent" stroke="none"></rect><path d="M 3,-100 L -22,-78 -6,-62 -28,-40 -3,-20 -22,2 4,22 -20,42 -6,58 -16,78 3,98 20,78 12,58 26,42 6,22 26,2 8,-20 28,-40 10,-62 26,-78 3,-100 Z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="0.8" stroke-linejoin="round" opacity="0.35"></path><path d="M 2,-92 L -18,-72 -4,-58 -24,-36 0,-18 -16,4 6,22 -14,40 -2,54 -10,72 2,88 14,72 10,54 22,40 4,22 22,4 6,-18 24,-36 6,-58 20,-72 2,-92 Z" fill="#6e6e6e" stroke="#3a3a3a" stroke-width="1.2" stroke-linejoin="round"></path><path d="M 2,-92 L -4,-82 8,-82 Z" fill="#d0e0ff" opacity="0.85"></path><path d="M -24,-36 L -18,-28 -30,-28 Z" fill="#d0e0ff" opacity="0.65"></path><path d="M 24,-36 L 18,-28 30,-28 Z" fill="#d0e0ff" opacity="0.6"></path><path d="M -14,40 L -8,47 -20,47 Z" fill="#d0e0ff" opacity="0.5"></path><line x1="2" y1="-92" x2="2" y2="88" stroke="rgba(255,255,255,0.15)" stroke-width="0.4" opacity="0.3" stroke-dasharray="3,4"></line><text id="svg-kunluoer-mountains-text" fill="rgba(255,255,255,0.6)" font-size="8" text-anchor="middle" font-weight="bold" opacity="0.7" style="font-family: Georgia, serif;" x="0" y="-110">Kunluoer Mountains</text></g><g transform="translate(248.8, 274.5)" opacity="0.3"><circle cx="0" cy="0" r="15" stroke="rgba(255,200,150,0.4)" stroke-width="0.8" fill="none" stroke-dasharray="2,2"></circle><circle cx="0" cy="0" r="30" stroke="rgba(255,200,150,0.3)" stroke-width="1" fill="none" stroke-dasharray="3,2"></circle><circle cx="0" cy="0" r="45" stroke="rgba(255,200,150,0.25)" stroke-width="1.2" fill="none" stroke-dasharray="4,2"></circle><line x1="45" y1="0" x2="55" y2="0" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="38.97114317029974" y1="22.499999999999996" x2="47.63139720814413" y2="27.499999999999996" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="22.500000000000004" y1="38.97114317029974" x2="27.500000000000007" y2="47.63139720814412" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="2.7554552980815448e-15" y1="45" x2="3.3677786976552213e-15" y2="55" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="-22.49999999999999" y1="38.97114317029974" x2="-27.49999999999999" y2="47.63139720814413" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="-38.97114317029974" y1="22.499999999999996" x2="-47.63139720814413" y2="27.499999999999996" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="-45" y1="5.5109105961630896e-15" x2="-55" y2="6.735557395310443e-15" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="-38.97114317029974" y1="-22.500000000000004" x2="-47.63139720814412" y2="-27.500000000000007" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="-22.50000000000002" y1="-38.971143170299726" x2="-27.500000000000025" y2="-47.63139720814411" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="-8.266365894244634e-15" y1="-45" x2="-1.0103336092965664e-14" y2="-55" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="22.500000000000004" y1="-38.97114317029974" x2="27.500000000000007" y2="-47.63139720814412" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line><line x1="38.971143170299726" y1="-22.50000000000002" x2="47.63139720814411" y2="-27.500000000000025" stroke="rgba(255,200,150,0.3)" stroke-width="0.8"></line></g><g transform="translate(456, 176.5)" style="pointer-events: none;"><path d="M -45,-25 Q -15,-14 0,-12 Q 14,-10 16,2 Q 14,14 0,12 Q -15,8 -45,-25 Z" fill="#3a6e8a" stroke="#2a5070" stroke-width="1.5" opacity="0.8" transform="scale(3)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(590.4, 201)" style="pointer-events: none;"><path d="M -28,-10 Q -8,-28 18,-18 Q 28,0 15,18 Q -3,25 -20,15 Q -30,5 -28,-10 Z" fill="#4a8aaa" stroke="#2a6080" stroke-width="1.5" opacity="0.8" transform="scale(1.3)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(562.4, 351.5)" style="pointer-events: none;"><path d="M -30,-8 Q -13,-23 18,-13 Q 35,-3 25,18 Q 8,28 -18,15 Q -35,5 -30,-8 Z" fill="#e6b0aa" stroke="#c0392b" stroke-width="1.5" opacity="0.8" transform="scale(1.45)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(321.6, 288.5)" style="pointer-events: none;"><path d="M -33,-13 Q -8,-30 25,-18 Q 33,8 18,23 Q -13,28 -30,10 Q -38,-3 -33,-13 Z" fill="#3a4a3a" stroke="#2a3a2a" stroke-width="1.5" opacity="0.8" transform="scale(1.3)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(433.6, 271)" style="pointer-events: none;"><path d="M -32,-12 Q -10,-28 22,-16 Q 36,2 22,20 Q 2,30 -20,18 Q -38,5 -32,-12 Z" fill="#4a6a55" stroke="#2a4a3a" stroke-width="1.5" opacity="0.8" transform="scale(1.3)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(260, 379.5)" style="pointer-events: none;"><path d="M -30,-10 Q -10,-23 23,-13 Q 30,10 13,20 Q -10,23 -23,10 Q -30,-3 -30,-10 Z" fill="#6a6a72" stroke="#4a4a55" stroke-width="1.5" opacity="0.8" transform="scale(1.35)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(394.4, 400.5)" style="pointer-events: none;"><path d="M -22,0 A 22,22 0 1,0 22,0 A 22,22 0 1,0 -22,0 Z" fill="#1a212e" stroke="#526075" stroke-width="1.5" opacity="0.8" transform="scale(1.35)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(321.6, 208)" style="pointer-events: none;"><path d="M -35,-8 Q -18,-28 20,-18 Q 35,0 25,18 Q 8,25 -18,15 Q -38,8 -35,-8 Z" fill="#4a8fb8" stroke="#2a6a90" stroke-width="1.5" opacity="0.8" transform="scale(1.25)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path></g><g transform="translate(517.6, 96)" style="pointer-events: none;"><path d="M -30,-13 Q -8,-30 23,-20 Q 35,3 18,23 Q -8,28 -23,15 Q -35,0 -30,-13 Z" fill="#5aafba" stroke="#3a8a9a" stroke-width="1.5" opacity="0.8" transform="scale(1.6)" style="filter: drop-shadow(rgba(100, 80, 60, 0.12) 0px 2px 4px);"></path><g transform="scale(1.1199999999999999)"><polygon points="-6,6 6,6 0,-18" fill="#1b130e"></polygon><line x1="0" y1="-18" x2="0" y2="-40" stroke="#1b130e" stroke-width="2.8"></line><line x1="0" y1="-40" x2="0" y2="-200" stroke="rgba(0,188,212,0.35)" stroke-width="0.8" stroke-dasharray="3,3"></line></g></g><g transform="translate(271.20000000000005, 169.5)" data-id="loc_deep_green_forest" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e" stroke-linejoin="round"><polygon points="-7,8 -1,-4 5,8"></polygon><polygon points="-1,8 5,-8 11,8" fill="#e0d0b0"></polygon></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Ma Juan Landing Point</text></g></g><g transform="translate(248.8, 274.5)" data-id="loc_despair_abyss" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><polygon points="0,-13 12,8 -12,8" style="transition: 0.2s;"></polygon><circle cx="0" cy="2" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Despair Abyss</text></g></g><g transform="translate(428, 341)" data-id="loc_ancient_ruins" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e" stroke-linejoin="round"><path d="M -6,8 L -6,-6 L -3,-10 L 1,-8 L 3,-12 L 6,-9 L 6,8 Z"></path><line x1="-6" y1="-2" x2="6" y2="-2"></line><line x1="-6" y1="3" x2="6" y2="3"></line><line x1="-1" y1="-8" x2="-1" y2="8"></line><line x1="2" y1="-10" x2="2" y2="8"></line></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Ancient Ruins</text></g></g><g transform="translate(293.6, 187)" data-id="loc_border_town" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="9" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="4.5" fill="#e0d0b0"></circle><line x1="-13" y1="0" x2="-9" y2="0"></line><line x1="9" y1="0" x2="13" y2="0"></line><line x1="0" y1="-13" x2="0" y2="-9"></line><line x1="0" y1="9" x2="0" y2="13"></line></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Sunset Town</text></g></g><g transform="translate(456, 176.5)" data-id="loc_meteor_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Meteor Lake</text></g></g><g transform="translate(590.4, 201)" data-id="loc_mirror_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Mirror Lake</text></g></g><g transform="translate(562.4, 351.5)" data-id="loc_red_algae_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Red Algae Salt Lake</text></g></g><g transform="translate(321.6, 288.5)" data-id="loc_silent_dead_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Silent Dead Lake</text></g></g><g transform="translate(433.6, 271)" data-id="loc_misty_swamp_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Misty Swamp Lake</text></g></g><g transform="translate(260, 379.5)" data-id="loc_iron_melt_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Iron Melt Salt Lake</text></g></g><g transform="translate(394.4, 400.5)" data-id="loc_abyssal_moon_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Moonshadow Abyss Lake</text></g></g><g transform="translate(321.6, 208)" data-id="loc_sunset_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Sunset Lake</text></g></g><g transform="translate(517.6, 96)" data-id="loc_holy_tree_lake" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Sacred Tree Lake</text></g></g><g transform="translate(388.8, 208)" data-id="loc_imperial_capital" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><polygon points="0,-14 4,-4 14,-4 6,2 9,12 0,6 -9,12 -6,2 -14,-4 -4,-4" style="transition: 0.2s;"></polygon><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Imperial Capital</text></g></g><g transform="translate(344, 159)" data-id="loc_small_sanctuary" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text y="0" fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">The Sanctuary (Green Valley)</text></g></g><g transform="translate(489.6, 348)" data-id="loc_kunluoer_mountains" style="cursor: pointer;"><circle cx="0" cy="0" r="20" fill="transparent" stroke="none"></circle><g stroke="#e0d0b0" stroke-width="1.8" fill="#1a1a2e"><circle cx="0" cy="0" r="8" style="transition: 0.2s;"></circle><circle cx="0" cy="0" r="3.5" fill="#e0d0b0"></circle></g><circle cx="0" cy="0" r="15" stroke="#ffcc66" stroke-width="1" stroke-dasharray="2,2" fill="none" opacity="0.8" style="display: none;"></circle><g transform="translate(0, 16)"><text fill="#e8e0d0" font-size="7.5" font-weight="normal" text-anchor="middle" style="pointer-events: none; font-family: &quot;Playfair Display&quot;, serif; transition: 0.2s;">Kunluoer Mountains</text></g></g></g></g><g transform="translate(100, 100) scale(0.8)" opacity="0.45" stroke="rgba(160,195,255,0.65)" stroke-width="1.2" fill="none" style="pointer-events: none;"><circle cx="0" cy="0" r="45" stroke-dasharray="2,2"></circle><circle cx="0" cy="0" r="35"></circle><line x1="-60" y1="0" x2="60" y2="0"></line><line x1="0" y1="-60" x2="0" y2="60"></line><polygon points="0,-50 5,-10 0,0" fill="rgba(160,195,255,0.65)"></polygon><polygon points="0,-50 -5,-10 0,0" fill="none"></polygon><polygon points="0,50 5,10 0,0" fill="rgba(160,195,255,0.65)"></polygon><polygon points="0,50 -5,-10 0,0" fill="none"></polygon><polygon points="50,0 10,5 0,0" fill="rgba(160,195,255,0.65)"></polygon><polygon points="50,0 10,-5 0,0" fill="none"></polygon><polygon points="-50,0 -10,5 0,0" fill="rgba(160,195,255,0.65)"></polygon><polygon points="-50,0 -10,-5 0,0" fill="none"></polygon><text x="0" y="-58" font-size="11" text-anchor="middle" fill="rgba(160,195,255,0.7)" font-weight="bold" font-family="serif">N</text></g><g transform="translate(115, 380) scale(0.6)" opacity="0.35" stroke="rgba(170,205,255,0.65)" stroke-width="1" fill="none" style="pointer-events: none;"><circle cx="0" cy="0" r="85" stroke-dasharray="3,3"></circle><circle cx="0" cy="0" r="65"></circle><circle cx="61" cy="-22" r="6" fill="rgba(200,160,100,0.6)"></circle><text x="73" y="-18" font-size="8" fill="rgba(200,180,140,0.6)" font-family="serif">Copper Moon</text><circle cx="-45" cy="45" r="4" fill="none" stroke="rgba(180,220,255,0.5)"></circle><text x="-95" y="48" font-size="8" fill="rgba(180,220,255,0.5)" font-family="serif">Glass Moon</text><circle cx="0" cy="0" r="35" stroke-width="1.5"></circle><circle cx="0" cy="0" r="22" stroke-dasharray="2,2"></circle><line x1="-35" y1="0" x2="35" y2="0" stroke-dasharray="1,2"></line><line x1="0" y1="-35" x2="0" y2="35" stroke-dasharray="1,2"></line><line x1="0" y1="-35" x2="0" y2="-65" stroke-width="1.2"></line><text id="svg-model-label-1" x="0" y="80" font-size="9" text-anchor="middle" fill="rgba(170,205,255,0.7)" font-weight="bold" font-family="serif" letter-spacing="1">PLANET LHAMO HOLLOW MODEL</text><text x="0" y="92" font-size="7" text-anchor="middle" fill="rgba(170,205,255,0.6)" font-family="serif">PLANET LHAMO HOLLOW MODEL</text></g><rect x="2" y="2" width="796" height="496" rx="6" stroke="rgba(60,100,160,0.3)" stroke-width="2" fill="none" style="pointer-events: none;"></rect></svg>
+
+    <div class="detail-panel" id="detail-panel">
+      <div class="panel-content custom-scrollbar" id="panel-content">
+        <!-- 动态生成 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const locations = [{"id":"loc_deep_green_forest","type":"Location","name":"Ma Juan Landing Point","properties":{"description":"The initial location where the protagonist Ma Juan materialized and landed on Planet Rahm from Earth's Night City across a rift in space-time, located on the eastern edge of the anti-magic 'Green Sea' (Deep Green Forest). A massive blue rift anomaly once streaked across the sky, leaving a strong beacon of gravitational ripples. This place is remote and desolate, hidden under ancient trees, and relatively close to Sunset Town.","ecologicalRules":"由于高密度‘箭木’对活性暗能粒子（魔能）的极端吸收与禁锁，绿海区域形成了一个广阔的物理禁魔死区。\n1. 暗能受体与逆向戒断（脱力症状）：拉姆星生灵细胞中进化有‘魔导受体（暗能受体）’，即便不会法术的平民与地精也自带微弱电位。在极度缺魔的绿海中，他们会产生严重的‘逆向戒断反应’，表现为全身酸软脱力、无法导航。主角马倦作为地球人类，完全没有这种魔导受体（零受体体质），因此进入其中行动如常，毫发无损；\n2. 精灵与巨魔的受体脑部制约与自然魔法：绿海的精灵和巨魔世世代代繁衍，演化出了‘受体脑部限制/低表达’以免疫戒断反应。他们无法使用帝国那种毁天灭地的宏观法术，只能使用特有的‘自然系魔法’（本质上是通过生物电磁信号与植物、真菌进行波谱共振，达到催生植物或安抚野兽的辅助效果），防卫主要依赖物理弓箭与强横的肉搏力量。外界的法师高手一旦强行闯入，立刻魔力尽失且全身瘫痪，会被这些本土猎手物理绞杀，因此没人敢强攻绿海；\n3. 纯物理野兽：绿海内部没有游离暗能，无法供养带魔晶核的魔兽。丛林内仅繁衍有极度危险的普通野生野兽（靠利爪、牙齿和毒素物理捕食）；\n4. 为什么不能放火烧林？：帝国等势力对绿海觊觎已久却绝对无法纵火，主要原因有两个：一是绿海内部为禁魔场域，一切火系魔法飞入绿海瞬间就会因魔能被剥离而自行熄灭；二是绿海占拉姆星面积接近一半，自成庞大的独立气候体系，其外围边界终年笼罩着高密度的降雨带与终日不散的湿冷浓雾。任何物理纵火在边界的持续暴雨和极高植被含水量面前，连起火点都无法维持，更遑论朝内部蔓延。","sensoryDetails":{"sight":"Desolate clearing hidden under ancient trees, faint gravitational ripples in the air, and a fading blue rift signature in the sky.","sound":"Absolute silence of the anti-magic forest, faint electromagnetic humming from the landing rift, and rustling of leaves.","smell":"Damp forest soil, sweet rot of decaying wood, and a sharp trace of ozone from the space-time portal."},"mapX":27,"mapY":27},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_border_town"},{"predicate":"CONNECTED_TO","targetId":"loc_mirror_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_holy_tree_lake"}]},{"id":"loc_despair_abyss","type":"Location","name":"Despair Abyss","properties":{"description":"A massive pit spanning a hundred miles, actually a crater formed by an ancient meteorite impact. The interior is filled with jagged rocks and is rarely inhabited. Locals say the pit is cursed, and entering it leads to illness, rotting flesh, and death. In fact, it is simply radiation sickness caused by massive nuclear radiation. This place produces high-quality magic crystals and is also the source of the 'old palladium' mine (Nitrogen-Tetraoxygen Rhodium-Palladium alloy) that goblins and Jude Ma desperately crave.","sensoryDetails":{"sight":"A massive crater filled with jagged rocks, with eerie dark blue radiation light faintly shimmering in its depths.","sound":"Wind howling through rock crevices like ghosts, and absolute dead silence (lacking sounds of life).","smell":"Sharp ozone, metallic mineral rust, and a faint trace of sulfur."},"mapX":23,"mapY":57},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_rust_valley"},{"predicate":"CONNECTED_TO","targetId":"loc_abyssal_moon_lake"}]},{"id":"loc_ancient_ruins","type":"Location","name":"Ancient Ruins","properties":{"description":"The ancient ruins do not refer to a single specific location; the three most famous ones left Jude Ma jaw-dropped: remnants of skyscrapers, a dam resembling a hydroelectric power station submerged under Meteor Lake, and a marsh landfill filled with plastic-like garbage.","sensoryDetails":{"sight":"Reinforced concrete ruins covered with green vines, and the jarring combination of rusted iron skeletons with natural scenery.","sound":"Dull drops of water hammering rusted steel plates, and wind whistling through damaged hollow steel pipes creating strange melodies.","smell":"Decaying vegetation interwoven with the smell of old industrial waste (such as aging plastic and iron rust)."},"mapX":55,"mapY":76},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_misty_swamp_lake"}]},{"id":"loc_night_city","type":"Location","name":"Screen City (Earth)","properties":{"description":"A futuristic metropolis on Earth in 2388, filled with acid rain, neon lights, abandoned signal towers, and narrow slums. The air is thick with the stench of lubricants and sulfur, and social resources are strictly monopolized by mega-corporations.","sensoryDetails":{"sight":"A dark sky with perpetual acid rain, blinding red and blue neon signs, and holographic ad projections.","sound":"Screaming sirens, roaring heavy aircraft, and the din of rain hammering metal roofs.","smell":"Burnt engine oil, sharp acid rain, and the sour stench of fermenting low-grade synthetic food from the sewers."}},"relations":[{"predicate":"CONTROLS","targetId":"faction_arasaka"}]},{"id":"loc_border_town","type":"Location","name":"Sunset Town","properties":{"description":"The border gateway of Planet Rahm, a roughly built town clinging to the mountainside. Stone houses of varying heights are scattered around, roofs covered with thatch or slate. Streets are muddy, with cattle carts hauling ore, smelling of livestock manure mixed with wet mud.","sensoryDetails":{"sight":"Rough gray stone buildings, muddy wheel ruts, and weary guards clad in chainmail.","sound":"Clanging hammer blows from blacksmith shops, snorting livestock, and crude curses in local dialects.","smell":"Stench of livestock manure, fishy smell of wet mud, and the smoke of burning firewood."},"mapX":31,"mapY":32},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_withered_leaf_valley"},{"predicate":"CONNECTED_TO","targetId":"loc_sunset_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_rust_valley"},{"predicate":"CONNECTED_TO","targetId":"loc_deep_green_forest"},{"predicate":"CONNECTED_TO","targetId":"loc_wasteland_canyon"}]},{"id":"loc_black_wolf_tavern","type":"Location","name":"Black Wolf Tavern","properties":{"description":"A wood-and-stone tavern in Sunset Town with a tattered wooden sign depicting a one-eyed wolf. Inside it is noisy, smelling of cheap malt beer, sweat, and cheap tobacco. It is a gathering place for miners, traveling merchants, and mercenaries.","sensoryDetails":{"sight":"Dim kerosene lamps, greasy heavy wood tables, and shifty-eyed patrons in the corners.","sound":"Loud, boisterous laughter, dull clinks of wooden mugs, and the strumming of a low-grade lute.","smell":"Sour smell of fermenting cheap malt beer, heavy sweat of men, and the choking smoke of cheap burning tobacco."}},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_border_town"}]},{"id":"loc_ram_planet","type":"Location","name":"Planet Rahm","properties":{"description":"The alien world where the protagonist transmigrated. Its real-universe astronomical prototype is Kepler-22b, located in Cygnus, about 620 light-years from Earth. Rahm's radius is about 2.4 times Earth's and its surface area is 5.7 times Earth's, yet its surface maintains a bizarre gravity of 1.2G. The surface lacks global oceans, and water resources are distributed across nine giant lakes (including fresh and salt lakes), hiding the huge mystery that the planet's interior is hollow."},"relations":[]},{"id":"loc_meteor_lake","type":"Location","name":"Meteor Lake","properties":{"description":"The largest freshwater inland lake on Planet Rahm, serving as the busiest shipping and fishing hub in the system. Submerged deep at the lake bottom is a massive ancient dam and hydroelectric turbine generator assembly. In Jude Ma's HUD, this is not the 'water-avoiding magical labyrinth' of native lore, but pure gravity concrete dam and mixed-flow turbine ruins, implying Rahm once possessed a highly industrialized technological civilization.","sensoryDetails":{"sight":"Deep green lake water, wood fishing boats of commoners floating alongside clattering steam cargo boats of goblins, and rough rocky docks along the shore.","sound":"Booming waves hitting rocks and hulls, steam boiler exhausts, and harsh calls of water birds.","smell":"Fishy freshwater lake wind, sharp smoke of burning lubricant and coke, and the mixture of tar and coal smoke in the docks."},"mapX":60,"mapY":29},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_sunset_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_misty_swamp_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_imperial_capital"},{"predicate":"CONNECTED_TO","targetId":"loc_red_algae_lake"}]},{"id":"loc_mirror_lake","type":"Location","name":"Mirror Lake","properties":{"description":"An extremely pure freshwater lake, crystal clear, with a surface resembling a giant glass mirror when windless. The shores are surrounded by the vast Deep Green Forest (primarily arrowwood), serving as the seclusion and settlement area for elves. It is one of the very few sanctuaries on Planet Rahm completely untouched by industrial or dark magic pollution.","sensoryDetails":{"sight":"A calm lake surface reflecting blue sky, white clouds, and towering arrowwood groves, with colorful pebbles clearly visible on the bottom.","sound":"Slight sound of falling leaves drifting on the water, insects and birds chirping in the shore grass, and absolute tranquility.","smell":"Sweet fragrance of arrowwood, and the fresh smell of soil and grass baked under the sun."},"mapX":84,"mapY":36},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_deep_green_forest"}]},{"id":"loc_red_algae_lake","type":"Location","name":"Red Algae Salt Lake","properties":{"description":"A highly saline inland saltwater lake. The water appears an eerie, bright crimson due to the massive proliferation of a unique salt-tolerant magic-conducting red algae. For commoners, it is toxic, undrinkable dead water, but for mages and goblins, the red algae is a valuable raw material for refining high-grade potions and chemical preservation.","sensoryDetails":{"sight":"Blood-red lake water reflecting a viscous sheen in the sunlight, with white salt crystals and dried red algae depositing along the shores.","sound":"Rustling wind blowing over salt flats, and the dull splashing of viscous lake water hitting the shore.","smell":"Sharp salty fishiness, slightly sour smell of rotting seaweed, and faint sulfur in the air."},"mapX":79,"mapY":79},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_meteor_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_iron_melt_lake"}]},{"id":"loc_silent_dead_lake","type":"Location","name":"Silent Dead Lake","properties":{"description":"The most saline and hostile hypersaline lake on Planet Rahm, where no organism can survive. Because it sits at a critical junction of gravitational disruption from the hollow interior, the lake surface frequently displays weak gravitational anomalies, causing thrown rocks to show bizarre parabolic deviations. It is a complete no-man's land.","sensoryDetails":{"sight":"Pure white salt desert crystals extending to the horizon, with the lake water frozen in a mirror-like grayish-white due to extreme salinity, without any waves.","sound":"Silent dead calm, with only the occasional sharp 'click' of cracking crystals.","smell":"Extremely dry air, pure bitter salt alkalinity, without any fishy smell of life."},"mapX":36,"mapY":61},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_iron_melt_lake"}]},{"id":"loc_misty_swamp_lake","type":"Location","name":"Misty Swamp Lake","properties":{"description":"A freshwater lake surrounded by vast muddy wetlands, shrouded year-round in thick, milky cold fog. The water channels here are extremely complex with hidden undercurrents. Scattered along the shores and deep in the mire is one of the ancient ruins, the 'ancient landfill,' containing massive piles of non-degradable plastic garbage and metal hulls left from the ancient high-tech civilization, regarded as a treasure hunt paradise by goblins.","sensoryDetails":{"sight":"Blinding white fog, vague shapes of decaying wood, and rusted containers half-buried in the mire alongside colorful ancient plastic waste.","sound":"Bubbling of gas popping in the silt, screeching swamp insects, and dripping water in the fog.","smell":"Strong smell of rotting vegetation, hydrogen sulfide stench from swamp gas (methane), and aging industrial plastic."},"mapX":56,"mapY":56},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_meteor_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_ancient_ruins"}]},{"id":"loc_iron_melt_lake","type":"Location","name":"Iron Melt Salt Lake","properties":{"description":"A saltwater lake rich in high concentrations of metal salts like iron, copper, and manganese. The water is cold and heavy, reflecting an iron-gray sheen like liquid metal. This lake is the headquarters of the goblin mechanics. The shores are lined with crude pipes, massive smokestacks, and wooden pile drivers, where goblins conduct metal smelting, quenching, and heavy industrial pollution experiments.","sensoryDetails":{"sight":"Viscous iron-gray lake water, chimneys belching black smoke alongside messy boilers, and colorful oil slicks floating on the surface.","sound":"Clanging machine blows from smelting workshops, screaming steam exhausts, and noisy workers.","smell":"Heavy soot and diesel exhaust, sharp acid from molten metal, and the cold rusty fishiness of the water itself."},"mapX":25,"mapY":87},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_red_algae_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_silent_dead_lake"}]},{"id":"loc_abyssal_moon_lake","type":"Location","name":"Moonshadow Abyss Lake","properties":{"description":"A small, circular freshwater crater lake, but its depth exceeds the average sea depth of Planet Rahm. The water is black as ink. The bottom hides countless massive limestone caves directly connecting to a vast underground river network and the unknown core of the planet, rumored to be one of the main smuggling routes for underground dark goblins to the surface.","sensoryDetails":{"sight":"A circular lake surrounded by steep cliffs, with black water seemingly absorbing all light, and the reflected moon appearing abnormally massive and distorted.","sound":"Crisp echoes of spring water dripping down cliffs, and hollow gurgling from deep under the water.","smell":"Cold, damp cave moisture, moldy smell of moss, and warm sulfur-laden wind blowing from deep underground."},"mapX":49,"mapY":93},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_despair_abyss"}]},{"id":"loc_sunset_lake","type":"Location","name":"Sunset Lake","properties":{"description":"A brackish water lake near the border gateway 'Sunset Town,' serving as the main water source for residents and miners. It is rich in hard-scaled silver fish, its surface reflecting a magnificent golden-red hue at dusk. It is also the water route for washing and transporting ore out of Sunset Town.","sensoryDetails":{"sight":"Shimmering brackish water, rustling reed marshes along the shore, golden-red lake light at sunset, and small fishing and ore barges.","sound":"Creaking of oars, fishermen's calls, and rustling waves hitting the reeds.","smell":"Slightly salty water wind, damp mud and decaying reeds, and the aroma of grilled silver fish."},"mapX":36,"mapY":38},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_border_town"},{"predicate":"CONNECTED_TO","targetId":"loc_meteor_lake"}]},{"id":"loc_holy_tree_lake","type":"Location","name":"Sacred Tree Lake","properties":{"description":"A sacred freshwater lake in the center of Planet Rahm's known territory. There is an island in the center where a giant carbonized ancient tree stands over a thousand meters tall, resembling a charcoal statue (Jude Ma's scan identifies it as a carbonized orbital elevator base left from the ancient tech era). The lake is a forbidden zone under the Magic Council, serving as an observatory for high-level mages to study celestial movements, high-magic tides, and the Obsidian Moon's trajectory.","sensoryDetails":{"sight":"A lake surface shrouded in a pale blue defense spell barrier, with the giant black tree in the center piercing the clouds, emitting faint electromagnetic and magical glow.","sound":"Faint humming from the barrier, waves generated by magic resonance, and absolute gravity.","smell":"Ozone after thunderstorms, ancient wood tar, and active magic particles."},"mapX":71,"mapY":6},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_imperial_capital"},{"predicate":"CONNECTED_TO","targetId":"loc_deep_green_forest"}]},{"id":"loc_imperial_capital","type":"Location","name":"Imperial Capital","properties":{"description":"The power core of the Laya Empire on Planet Rahm, built around giant magic barriers powered by high-purity magi-crystals and wizard towers piercing the sky. It is filled with grand stone castles and mage estates, contrasting sharply with dirty slums. Deep in the city are intricate mana pipes and entrances to ancient tech ruins.","sensoryDetails":{"sight":"Towering white stone magic towers, defense barriers shimmering pale blue at night, flying mage mounts, and muddy slums in dark corners.","sound":"Faint humming of the barrier, horseshoes clattering on cobblestones, and mage attendants shouting at commoners.","smell":"Cold marble after rain, rich perfume in noble areas, and the sharp stench of soot and slops in the lower city."},"mapX":48,"mapY":38},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_meteor_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_holy_tree_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_wasteland_canyon"}]},{"id":"loc_wasteland_canyon","type":"Location","name":"Wasteland Canyon","properties":{"description":"A wind-eroded cliff canyon, serving as the exit of the smuggling route between Sunset Town and the Imperial Capital. The climate is dry and dusty, a perfect spot for escapes and ambushes.","mapX":46,"mapY":44},"relations":[{"predicate":"CONNECTED_TO","targetId":"loc_imperial_capital"},{"predicate":"CONNECTED_TO","targetId":"loc_border_town"}]},{"id":"loc_rust_valley","type":"Location","name":"Rust Valley","properties":{"description":"The mandatory path to the Despair Abyss, containing a mana detection checkpoint guarded by Imperial guards and Inquisition mages. Extremely difficult to pass for Jude Ma, whose body continuously leaks power and emits abnormal electromagnetic signals.","mapX":35,"mapY":65},"relations":[{"predicate":"CONNECTED_TO","targetId":"loc_border_town"},{"predicate":"CONNECTED_TO","targetId":"loc_despair_abyss"}]},{"id":"loc_withered_leaf_valley","type":"Location","name":"Withered Leaf Valley","properties":{"description":"A barren valley east of Sunset Town. The riverbed of the Withered Leaf River is extremely wide but dry, piled with decaying black arrowwood leaves, smelling of organic char. The river center contains dense shoulder-high black reed marshes where Jude Ma and Luna used high-density water curtains to evade imperial searchlights.","mapX":33,"mapY":56},"relations":[{"predicate":"CONNECTED_TO","targetId":"loc_border_town"}]},{"id":"loc_white_salt_terrace","type":"Location","name":"White Salt Terrace","properties":{"description":"A pale salt-crusted slope on the southeast edge of the Wasteland Canyon, covered with thin salt flakes that shimmer like broken glass in the wind. Smugglers use rock columns, vines, and old road signs to avoid the Imperial highway. At the end of Ch014, Jude Ma and Luna arrived here and discovered transmission talisman ashes.","mapX":35,"mapY":46},"relations":[]},{"id":"loc_star_shard_shoal","type":"Location","name":"Star-Fragment Beach","properties":{"description":"A remote salt crystal beach far from the Sunset Town shipping channels, belonging to the outer edge of Sunset Lake. This is an early geographical node, which in super-Earth scale represents only the first few forks. The shore forms blue crystal salt springs, salt crystal stone forests, and nocturnal fog belts. At night, the Azure Moon and Copper Moon reflect on the crystals and shallow water, resembling scattered star fragments, hence the name. In Ch016, it serves as a major setting: Jude Ma stargazes at the moons; Luna comes clean about the Despair Abyss route, admitting they are still at the outer edge of Sunset Lake, very far from the abyss, and that going there requires crossing vast wilderness, avoiding checkpoints, and skirting the Green Sea. The abyss has a 'death-miasma' (radiation) that rots the body. They change plans to send Luna to the Sanctuary first to acquire maps, supplies, and protective gear.","mapX":37,"mapY":59,"belongsToLake":"loc_sunset_lake","chapterRole":"Ch016 重点景观、朋友关系推进、两个月亮夜空谈话、绝望深渊路线尺度与风险交底、改线小圣域","routeFunction":"位于落日湖偏僻外缘，仍属于边境与落日镇影响范围；绝望深渊方向没有错，但这里只是长途路线最初的几个岔路，不能让马倦通过地理观察发现路线错误，因为路线并未错误，必须由露娜主动自爆隐瞒的尺度与风险。"},"relations":[{"predicate":"PART_OF","targetId":"loc_sunset_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_geothermal_fog_belt"},{"predicate":"NEAR","targetId":"loc_white_salt_terrace"},{"predicate":"ROUTE_EVENTUALLY_LEADS_TO","targetId":"loc_despair_abyss"},{"predicate":"ROUTE_FORK_TO","targetId":"loc_small_sanctuary"}]},{"id":"loc_small_sanctuary","type":"Location","name":"The Sanctuary (Green Valley)","properties":{"description":"The location of the Sanctuary, nestled in the 'Green Valley' basin surrounded by mountains north of Mirror Lake, far from the Green Sea's anti-magic zone. White stone towers and arcades blend with nature. The core landmark is the semi-submerged Circular Water-Yard Library built in the ruins of an ancient satellite dish antenna. Though poor due to the Empire's blockades (apprentices wear worn robes and use spore lamps), its academic prestige and the presence of the Grand Sage make it the last sanctuary of knowledge.","mapX":40,"mapY":24,"sensoryDetails":{"sight":"","sound":"","smell":""}},"relations":[{"predicate":"LOCATED_IN","targetId":"loc_ram_planet"},{"predicate":"CONNECTED_TO","targetId":"loc_mirror_lake"},{"predicate":"CONNECTED_TO","targetId":"loc_wasteland_canyon"}]},{"id":"loc_geothermal_fog_belt","type":"Location","name":"Geothermal Fog Belt","properties":{"description":"A special environment at the outer edge of Star-Fragment Beach, filled with blue-white fog at night, reducing visibility and affecting water magic.","mapX":38,"mapY":60},"relations":[]},{"id":"loc_crease_slope","type":"Location","name":"Crease Slope","properties":{"description":"Located southwest of Sunset Lake. The road is not an official highway but is packed extremely solid, with gray limestone layers exposed like bent bony plates. The air is filled with the fishy smell and wet salinity blown from Sunset Lake.","mapX":0,"mapY":0},"relations":[]},{"id":"loc_green_sea","type":"Location","name":"Green Sea","properties":{"description":"The Deep Green Forest (or its border area). This place is full of bizarre rules and is known as a lost forbidden zone that 'eats roads'. Upon entering, compass needles spin wildly, salt pans turn white, wind flags stop moving, and scavenging teams going in and out often suffer over fifty percent casualties, leaving behind chaotic self-tied road signs.","mapX":0,"mapY":0},"relations":[]},{"id":"loc_iron_rust_dock","type":"Location","name":"Iron Rust Dock","properties":{"description":"A goblin settlement located west of the Iron Melt Salt Lake, filled with goblin furnaces. It is a well-known wasteland center for machinery, scrap trading, and repairs. Ding Ear claims Master Viktor can be found here, or one can be guided to his workshop by asking 'whose furnace exploded the most'.","mapX":0,"mapY":0},"relations":[]},{"id":"loc_old_salt_ditch","type":"Location","name":"Old Salt Ditch","properties":{"description":"One of the roads branching southwest from Crease Slope, leading to the salt-producing area, distinct from the road leading to the Green Sea.","mapX":0,"mapY":0},"relations":[]},{"id":"loc_kunluoer_mountains","type":"Location","name":"Kunluoer Mountains","properties":{"description":"The most spectacular north-south mountain range on Planet Rahm, running like a natural barrier through the east-central region of the continent. The range stretches for thousands of miles with overlapping peaks, the highest of which are covered in snow year-round. The climate differs significantly on either side, serving as a natural boundary for multiple geographic regions.","mapX":66,"mapY":78},"relations":[]}];
+    const majorIds = new Set(["loc_deep_green_forest","loc_mirror_lake","loc_small_sanctuary","loc_holy_tree_lake","loc_imperial_capital","loc_border_town","loc_sunset_lake","loc_meteor_lake","loc_red_algae_lake","loc_iron_melt_lake","loc_silent_dead_lake","loc_despair_abyss","loc_abyssal_moon_lake","loc_kunluoer_mountains","loc_misty_swamp_lake","loc_ancient_ruins"]);
+    let selectedId = null;
+    const panel = document.getElementById('detail-panel');
+    const content = document.getElementById('panel-content');
+
+    // 查找子地标
+    function getSubLocations(majorNode) {
+      const subLocs = [];
+      locations.forEach(s => {
+        if (majorIds.has(s.id)) return;
+        const isRelated = (s.relations || []).some(r => 
+          r.targetId === majorNode.id && 
+          (r.predicate === 'LOCATED_IN' || r.predicate === 'PART_OF' || r.predicate === 'CONNECTED_TO' || r.predicate === 'NEAR')
+        );
+        if (isRelated) {
+          subLocs.push({ id: s.id, name: s.name });
+        }
+      });
+      return subLocs;
+    }
+
+    // 渲染右侧面板内容
+    function updatePanel() {
+      const selectedLoc = locations.find(s => s.id === selectedId);
+      if (!selectedLoc) {
+        const emptyText = "Please click a geographic region on the map to view its introduction and landmark settings.";
+        content.innerHTML = '<div class="empty-state">' +
+          '<svg style="width: 36px; height: 36px; opacity: 0.5; margin-bottom: 0.8rem;" class="animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<circle cx="12" cy="12" r="10" />' +
+            '<polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88" />' +
+          '</svg>' +
+          '<p style="font-size: 0.85rem;">' + emptyText + '</p>' +
+        '</div>';
+        return;
+      }
+
+      // 获取相邻地点
+      const adjacents = (selectedLoc.relations || [])
+        .filter(r => r.predicate === 'CONNECTED_TO')
+        .map(r => locations.find(t => t.id === r.targetId))
+        .filter(t => t && majorIds.has(t.id));
+
+      const subLocations = getSubLocations(selectedLoc);
+
+      const regionTag = "Geographic Region";
+      const introLabel = "Introduction:";
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 0.8rem;">' +
+        '<div style="border-bottom: 1px solid rgba(100,140,200,0.2); padding-bottom: 0.4rem;">' +
+          '<span class="landmark-tag">' + regionTag + '</span>' +
+          '<h3 class="landmark-title">📍 ' + selectedLoc.name + '</h3>' +
+        '</div>' +
+        '<div>' +
+          '<span style="font-size: 0.75rem; font-weight: bold; color: rgba(160,190,230,0.8)">' + introLabel + '</span>' +
+          '<p style="font-size: 0.8rem; color: #b0c0d8; margin-top: 0.2rem; line-height: 1.45; text-align: justify;">' +
+            (selectedLoc.properties ? selectedLoc.properties.description : '') +
+          '</p>' +
+        '</div>';
+
+      if (subLocations.length > 0) {
+        let subHtml = '';
+        subLocations.forEach(sub => {
+          subHtml += '<div>• ' + sub.name + '</div>';
+        });
+        const coreSubLabel = "🧭 Core Sub-landmarks:";
+        html += '<div style="background: rgba(40,60,100,0.3); padding: 0.6rem 0.8rem; border-radius: 4px; border: 1px solid rgba(100,140,200,0.2); font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.3rem;">' +
+          '<span style="font-weight: bold; color: #ffaa44; display: flex; align-items: center; gap: 0.2rem;">' + coreSubLabel + '</span>' +
+          '<div style="display: flex; flex-direction: column; gap: 0.2rem; color: #b0c0d8; padding-left: 0.4rem;">' +
+            subHtml +
+          '</div>' +
+        '</div>';
+      }
+
+      const sensoryDetails = selectedLoc.properties ? selectedLoc.properties.sensoryDetails : null;
+      if (sensoryDetails) {
+        const sensorySight = sensoryDetails.sight || "None";
+        const sensorySound = sensoryDetails.sound || "None";
+        const sensorySmell = sensoryDetails.smell || "None";
+
+        const sensoryLabel = "👁️ Sensory Details:";
+        const sightLabel = "Sight:";
+        const soundLabel = "Sound:";
+        const smellLabel = "Smell:";
+
+        html += '<div style="background: rgba(40,60,100,0.3); padding: 0.6rem 0.8rem; border-radius: 4px; border: 1px solid rgba(100,140,200,0.2); font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.3rem;">' +
+          '<span style="font-weight: bold; color: rgba(160,190,230,0.8)">' + sensoryLabel + '</span>' +
+          '<div style="margin-top: 0.2rem;"><span style="color: #ffaa44;">' + sightLabel + '</span> ' + sensorySight + '</div>' +
+          '<div><span style="color: #ffaa44;">' + soundLabel + '</span> ' + sensorySound + '</div>' +
+          '<div><span style="color: #ffaa44;">' + smellLabel + '</span> ' + sensorySmell + '</div>' +
+        '</div>';
+      }
+
+      const connLabel = "Connected Regions (" + adjacents.length + "):";
+      html += '<div>' +
+        '<span style="font-size: 0.75rem; font-weight: bold; color: rgba(160,190,230,0.8)">' + connLabel + '</span>';
+
+      if (adjacents.length === 0) {
+        const noPassageText = "No direct passages configured.";
+        html += '<p style="font-size: 0.75rem; color: rgba(140,180,230,0.5)">' + noPassageText + '</p>';
+      } else {
+        html += '<div class="adjacent-container">';
+        adjacents.forEach(adj => {
+          html += '<button class="adjacent-btn" onclick="selectNode('' + adj.id + '')">' + adj.name + '</button>';
+        });
+        html += '</div>';
+      }
+
+      html += '</div></div>';
+      content.innerHTML = html;
+    }
+
+    // 选择地标逻辑
+    function selectNode(id) {
+      if (selectedId) {
+        const prevNode = document.querySelector('g[data-id="' + selectedId + '"]');
+        if (prevNode) {
+          prevNode.classList.remove('selected-node');
+          const ring = prevNode.querySelector('circle[stroke="#ffcc66"]');
+          if (ring) ring.style.display = 'none';
+        }
+      }
+
+      if (selectedId === id) {
+        selectedId = null;
+      } else {
+        selectedId = id;
+        const nextNode = document.querySelector('g[data-id="' + id + '"]');
+        if (nextNode) {
+          nextNode.classList.add('selected-node');
+          const ring = nextNode.querySelector('circle[stroke="#ffcc66"]');
+          if (ring) ring.style.display = 'block';
+        }
+      }
+      updatePanel();
+    }
+    window.selectNode = selectNode;
+
+    // 绑定事件到所有 SVG 主要地标上
+    document.querySelectorAll('g[data-id]').forEach(el => {
+      // 预置 selected ring 样式隐藏
+      const ring = el.querySelector('circle[stroke="#ffcc66"]');
+      if (ring) ring.style.display = 'none';
+
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const id = this.getAttribute('data-id');
+        window.selectNode(id);
+      });
+    });
+
+    // 背景点击取消选中
+    document.querySelector('svg').addEventListener('click', function() {
+      if (selectedId) {
+        window.selectNode(selectedId);
+      }
+    });
+
+    // 初始化面板
+    updatePanel();
+  </script>
+</body>
+</html>
